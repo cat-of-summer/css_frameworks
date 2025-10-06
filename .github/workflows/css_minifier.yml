@@ -1,0 +1,47 @@
+name: Minify all CSS files
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  minify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install csso-cli
+        run: npm install -g csso-cli
+
+      - name: Minify all .css files (excluding .min.css)
+        run: |
+          shopt -s globstar nullglob
+          for file in **/*.css; do
+            if [[ "$file" != *.min.css ]]; then
+              minified="${file%.css}.min.css"
+              echo "Minifying $file -> $minified"
+              csso "$file" --output "$minified"
+            fi
+          done
+
+      - name: Commit and push minified files
+        env:
+          TOKEN: ${{ secrets.GIT_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          shopt -s globstar nullglob
+          git add **/*.min.css || true
+
+          git commit -m "Auto-minified CSS files" || echo "Nothing to commi
