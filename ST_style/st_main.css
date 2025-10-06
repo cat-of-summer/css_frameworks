@@ -1422,6 +1422,11 @@ hr {
 	margin: 0
 }
 
+*[fluid] {
+    width: fit-content;
+    height: fit-content;
+}
+
 *[icon] {
     display: flex;
     justify-content: center;

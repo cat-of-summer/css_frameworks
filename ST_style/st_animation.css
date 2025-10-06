@@ -14,6 +14,20 @@
     transition: inherit;
 }
 
+/* raise */
+*[raise] {
+    --transition-duration: var(--td-medium);
+    --raise-hover: 0.5rem;
+    --raise-active: 1rem;
+
+    will-change: transform;
+    animation: blink var(--blink-duration) step-end var(--blink-iteration-count)
+}
+
+*[raise~="hover"]:hover { transform: translateY(calc(-1 * var(--raise-hover))) }
+*[raise~="active"]:active { transform: translateY(calc(-1 * var(--raise-active))) }
+*[raise~="focus"]:focus { transform: translateY(calc(-1 * var(--raise-active))) }
+
 /* scale */
 *[scale] {
     --transition-duration: var(--td-medium);
@@ -430,10 +444,9 @@
     --ripple-color: rgba(255, 255, 255, 0.479);
 
     position: relative;
-    overflow: hidden
 }
 
-*[ripple]::after {
+*[ripple]::before {
     will-change: transform;
     content: "";
     position: absolute;
