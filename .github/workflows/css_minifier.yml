@@ -44,4 +44,7 @@ jobs:
           shopt -s globstar nullglob
           git add **/*.min.css || true
 
-          git commit -m "Auto-minified CSS files" || echo "Nothing to commi
+          git commit -m "Auto-minified CSS files" || echo "Nothing to commit"
+
+          git remote set-url origin https://x-access-token:${TOKEN}@github.com/${{ github.repository }}
+          git push origin HEAD:${{ github.ref_name }}
