@@ -1791,11 +1791,11 @@ section { max-width: 340px }
 
 /* md-only: 768–1023.98px */
 @media (min-width: 768px) and (max-width: 1023.98px) {
-    *[d~="md-none"]   { --display: none }
-    *[d~="md-block"]  { --display: block }
-    *[d~="md-flex"]   { --display: flex }
-    *[d~="md-grid"]   { --display: grid }
-    *[d~="md-inline"] { --display: inline }
+    *[d~="md-only-none"]   { --display: none }
+    *[d~="md-only-block"]  { --display: block }
+    *[d~="md-only-flex"]   { --display: flex }
+    *[d~="md-only-grid"]   { --display: grid }
+    *[d~="md-only-inline"] { --display: inline }
 }
 
 /* lp-only: 1024–1279.98px */
