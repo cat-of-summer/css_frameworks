@@ -1346,7 +1346,7 @@ body {
     user-select: none;
     width: 100vw;
     overflow-x: hidden;
-    font-size: 1.6rem;
+    font-size: var(--fs-p);
     font-weight: var(--font-weight);
     line-height: 1;
 }
@@ -1379,6 +1379,7 @@ img, iframe {
 }
 
 input, textarea, button { font-size: var(--fs-p) }
+input::placeholder, textarea::placeholder { font-size: var(--fs-p) }
 textarea:focus, input:focus, button:focus { outline: none }
 
 label > input, label > textarea {
