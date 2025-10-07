@@ -1407,6 +1407,11 @@ label:has(> *[checkbox], *[radio]):has(> input[type="checkbox"], input[type="rad
         vertical-align: middle;
         width: var(--fs-p);
         height: var(--fs-p);
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
     }
 }
 
