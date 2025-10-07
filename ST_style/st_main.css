@@ -1488,9 +1488,10 @@ h5 { font-size: var(--fs-h5) }
 h6 { font-size: var(--fs-h6) }
 p { font-size: var(--fs-p) }
 
-section { max-width: 340px }
+section { max-width: 320px }
 @media (min-width:360px) { section { max-width: 340px } }
 @media (min-width:768px) { section { max-width: 720px } }
+@media (min-width:595px) { section { max-width: 550px } }
 @media (min-width:1024px) { section { max-width: 960px } }
 @media (min-width:1280px) { section { max-width: 1200px } }
 @media (min-width:1536px) { section { max-width: 1320px } }
