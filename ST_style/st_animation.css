@@ -461,7 +461,7 @@
     pointer-events: none
 }
 
-*[ripple~="active"]:active::after, *[ripple~="hover"]:hover::after, *[ripple~="focus"]:focus::after {
+*[ripple~="active"]:active::before, *[ripple~="hover"]:hover::before, *[ripple~="focus"]:focus::before {
     animation: ripple var(--ripple-duration) ease-out
 }
 
