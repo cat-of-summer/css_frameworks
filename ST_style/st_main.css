@@ -1871,7 +1871,10 @@ section { max-width: 320px }
         padding: 0;
         list-style-position: inside
     }
-    li { margin-bottom: .5rem }
+    li {
+        list-style: initial;
+        margin-bottom: .5rem
+    }
     blockquote {
         margin: 0 0 1rem;
         padding-left: 1rem;
