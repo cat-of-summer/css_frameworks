@@ -1332,7 +1332,7 @@
     font-family: inherit;
     font-style: inherit;
     color: inherit;
-    vertical-align: middle;
+    vertical-align: baseline;
 }
 
 html {
