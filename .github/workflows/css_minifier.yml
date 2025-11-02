@@ -1,4 +1,4 @@
-name: Minify all CSS, JS files
+name: Auto-minify CSS & JS (parallel, latest tools)
 
 on:
   push: {}
@@ -10,60 +10,114 @@ jobs:
   minify:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        shell: bash -l {0}
+
     steps:
-      - name: Checkout current branch
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install csso-cli
-        run: npm install -g csso-cli
-
-      - name: Minify all .css files (excluding .min.css)
-        run: |
-          shopt -s globstar nullglob
-          for file in **/*.css; do
-            if [[ "$file" != *.min.css ]]; then
-              minified="${file%.css}.min.css"
-              echo "Minifying $file -> $minified"
-              csso "$file" --output "$minified"
-            fi
-          done
-
-      - name: Install Terser
-        run: npm install -g terser
-
-      - name: Minify all .js files (excluding .min.js)
-        run: |
-          shopt -s globstar nullglob
-          for file in **/*.js; do
-            if [[ "$file" != *.min.js ]]; then
-              minified="${file%.js}.min.js"
-              echo "Minifying $file -> $minified"
-              terser "$file" -o "$minified" --compress --mangle
-            fi
-          done
-
-      - name: Commit and push minified files
-        env:
-          TOKEN: ${{ secrets.GIT_TOKEN }}
+      - name: Configure git user for commits
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          shopt -s globstar nullglob
-          git add .
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
+      - name: Install latest minifiers
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund --no-save csso-cli terser@latest
+
+      - name: Find and minify .css & .js
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+
+          PARALLEL=$(nproc 2>/dev/null || echo 2)
+
+          CSSO="./node_modules/.bin/csso"
+          TERSER="./node_modules/.bin/terser"
+
+          if [ ! -x "${CSSO}" ]; then
+            echo "Error: csso not found at ${CSSO}"
+            exit 2
+          fi
+
+          if [ ! -x "${TERSER}" ]; then
+            echo "Error: terser not found at ${TERSER}"
+            exit 2
+          fi
+
+          EXCLUDE_PATHS=(
+            './node_modules'
+            './vendor'
+            './dist'
+            './build'
+            './bower_components'
+          )
+
+          FIND_EXCLUDES=(
+            -path '*/.*' -prune -o
+          )
+
+          for p in "${EXCLUDE_PATHS[@]}"; do
+            FIND_EXCLUDES+=( -path "$p" -prune -o )
+          done
+
+          eval "find . ${FIND_EXCLUDES[*]} -type f \( -iname '*.css' -o -iname '*.js' \) ! -iname '*.min.*' -print0" \
+            | xargs -0 -n1 -P "$PARALLEL" -I{} bash -c '
+              f="$1"
+              pf="${f#./}"
+              case "$f" in
+                *.css|*.CSS)
+                  out="${f%.*}.min.css"
+                  printf "[css] %s -> %s\n" "$pf" "${out#./}"
+                  if '"${CSSO}"' "$f" --output "$out"; then
+                    true
+                  else
+                    printf "ERROR minifying css: %s\n" "$pf" >&2
+                    exit 1
+                  fi
+                ;;
+                *.js|*.JS)
+                  out="${f%.*}.min.js"
+                  printf "[js]  %s -> %s\n" "$pf" "${out#./}"
+                  if '"${TERSER}"' "$f" -o "$out" --compress --mangle; then
+                    true
+                  else
+                    printf "ERROR minifying js: %s\n" "$pf" >&2
+                    exit 1
+                  fi
+                ;;
+                *)
+                  # skip
+                ;;
+              esac
+            ' _ {}
+
+      - name: Stage only minified files for commit
+        run: |
+          set -euo pipefail
+          find . -type f \( -iname '*.min.css' -o -iname '*.min.js' \) \
+            ! -path './.git/*' -print0 \
+            | xargs -0 --no-run-if-empty git add --
+
+      - name: Commit & push if there are changes
+        run: |
+          set -euo pipefail
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No minified changes to commit"
             exit 0
           fi
 
-          git commit -m "Auto-minified CSS, JS files"
+          git commit -m "auto:minify [skip ci]"
 
-          git push origin HEAD:${{ github.ref_name }}
+          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
