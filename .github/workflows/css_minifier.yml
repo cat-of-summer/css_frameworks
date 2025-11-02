@@ -1,9 +1,7 @@
-name: Minify all CSS files
+name: Minify all CSS, JS files
 
 on:
-  push:
-    branches:
-      - '**'
+  push: {}
 
 jobs:
   minify:
@@ -34,6 +32,20 @@ jobs:
             fi
           done
 
+      - name: Install Terser
+        run: npm install -g terser
+
+      - name: Minify all .js files (excluding .min.js)
+        run: |
+          shopt -s globstar nullglob
+          for file in **/*.js; do
+            if [[ "$file" != *.min.js ]]; then
+              minified="${file%.js}.min.js"
+              echo "Minifying $file -> $minified"
+              terser "$file" -o "$minified" --compress --mangle
+            fi
+          done
+
       - name: Commit and push minified files
         env:
           TOKEN: ${{ secrets.GIT_TOKEN }}
@@ -42,9 +54,14 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           shopt -s globstar nullglob
-          git add **/*.min.css || true
+          git add '*.min.js'
+          git add '*.min.css'
 
-          git commit -m "Auto-minified CSS files" || echo "Nothing to commit"
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
 
-          git remote set-url origin https://x-access-token:${TOKEN}@github.com/${{ github.repository }}
+          git commit -m "Auto-minified CSS, JS files"
+
           git push origin HEAD:${{ github.ref_name }}
