@@ -109,7 +109,7 @@ jobs:
 
       - name: Commit & push if there are changes
         run: |
-          set -euo pipefail
+          set -uo pipefail
           if git diff --cached --quiet; then
             echo "No minified changes to commit"
             exit 0
