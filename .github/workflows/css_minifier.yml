@@ -2,6 +2,9 @@ name: Minify all CSS, JS files
 
 on:
   push: {}
+  
+permissions:
+  contents: write
 
 jobs:
   minify:
